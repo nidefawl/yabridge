@@ -51,6 +51,7 @@ compiler_options = [
   # CPUs, but when we're compiling the 32-bit bitbridge we need to manually add
   # this flag.
   '-msse2',
+  '-g'
 ]
 
 chainloader_compiler_options = [
