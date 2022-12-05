@@ -81,7 +81,7 @@ ghc::filesystem::path get_temporary_directory();
 
 /**
  * Get the current thread's scheduling priority if the thread is using
- * `SCHED_FIFO`. Returns a nullopt of the calling thread is not under realtime
+ * `SCHED_FIFO`. Returns a nullopt if the calling thread is not under realtime
  * scheduling.
  */
 std::optional<int> get_realtime_priority() noexcept;
