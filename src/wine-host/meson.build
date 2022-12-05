@@ -39,11 +39,11 @@ if with_bitbridge
     tomlplusplus_dep,
     wine_threads_dep,
     xcb_32bit_dep,
+    wine_ole32_dep,
   ]
   if with_vst3
     host_32bit_deps += [
       vst3_sdk_hosting_wine_32bit_dep,
-      wine_ole32_dep,
       wine_shell32_dep,
       wine_uuid_dep,
     ]
