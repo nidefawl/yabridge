@@ -194,18 +194,21 @@ Vst2PluginBridge::Vst2PluginBridge(const ghc::filesystem::path& plugin_path,
 }
 
 Vst2PluginBridge::~Vst2PluginBridge() noexcept {
-    try {
+    // try {
         // Drop all work make sure all sockets are closed
+
+            puts("plugin_host_->terminate");
         plugin_host_->terminate();
 
         // The `stop()` method will cause the IO context to just drop all of its
         // outstanding work immediately
+            puts("io_context_.stop");
         io_context_.stop();
-    } catch (const std::system_error&) {
+    // } catch (const std::system_error&) {
         // It could be that the sockets have already been closed or that the
         // process has already exited (at which point we probably won't be
         // executing this, but maybe if all the stars align)
-    }
+    // }
 }
 
 class DispatchDataConverter : public DefaultDataConverter {
@@ -501,6 +504,20 @@ class DispatchDataConverter : public DefaultDataConverter {
     AEffect& plugin_;
     VstRect& rect_;
 };
+class ScopedBridgedDeleter {
+   public:
+    ~ScopedBridgedDeleter() {
+        if (bridge_) {
+            puts("pre delete");
+            delete bridge_;
+            puts("post delete");
+        }
+    }
+    void setBridge(Vst2PluginBridge* bridge) { bridge_ = bridge; }
+
+   private:
+    Vst2PluginBridge* bridge_ = nullptr;
+};
 
 intptr_t Vst2PluginBridge::dispatch(AEffect* /*plugin*/,
                                     int opcode,
@@ -508,6 +525,7 @@ intptr_t Vst2PluginBridge::dispatch(AEffect* /*plugin*/,
                                     intptr_t value,
                                     void* data,
                                     float option) {
+    ScopedBridgedDeleter d;
     // HACK: Ardour 5.X has a bug in its VST implementation where it calls the
     //       plugin's dispatcher before the plugin has even finished
     //       initializing. This has been fixed back in 2018, but there has not
@@ -540,14 +558,14 @@ intptr_t Vst2PluginBridge::dispatch(AEffect* /*plugin*/,
                 return_value = sockets_.host_vst_dispatch_.send_event(
                     converter, std::pair<Vst2Logger&, bool>(logger_, true),
                     opcode, index, value, data, option);
+                logger_.log("Shutdown!");
             } catch (const std::system_error&) {
                 // Thrown when the socket gets closed because the VST plugin
                 // loaded into the Wine process crashed during shutdown
                 logger_.log("The plugin crashed during shutdown, ignoring");
             }
 
-            delete this;
-
+            d.setBridge(this);
             return return_value;
         }; break;
         case effEditIdle: {
@@ -815,6 +833,7 @@ intptr_t dispatch_proxy(AEffect* plugin,
                         intptr_t value,
                         void* data,
                         float option) {
+    puts("dispatch_proxy");
     return get_bridge_instance(*plugin).dispatch(plugin, opcode, index, value,
                                                  data, option);
 }
@@ -823,6 +842,7 @@ void process_proxy(AEffect* plugin,
                    float** inputs,
                    float** outputs,
                    int sample_frames) {
+    puts("process_proxy");
     return get_bridge_instance(*plugin).process(plugin, inputs, outputs,
                                                 sample_frames);
 }
@@ -831,6 +851,7 @@ void process_replacing_proxy(AEffect* plugin,
                              float** inputs,
                              float** outputs,
                              int sample_frames) {
+    puts("process_replacing_proxy");
     return get_bridge_instance(*plugin).process_replacing(
         plugin, inputs, outputs, sample_frames);
 }
@@ -839,14 +860,17 @@ void process_double_replacing_proxy(AEffect* plugin,
                                     double** inputs,
                                     double** outputs,
                                     int sample_frames) {
+    puts("process_double_replacing_proxy");
     return get_bridge_instance(*plugin).process_double_replacing(
         plugin, inputs, outputs, sample_frames);
 }
 
 void set_parameter_proxy(AEffect* plugin, int index, float value) {
+    puts("set_parameter_proxy");
     return get_bridge_instance(*plugin).set_parameter(plugin, index, value);
 }
 
 float get_parameter_proxy(AEffect* plugin, int index) {
+    puts("get_parameter_proxy");
     return get_bridge_instance(*plugin).get_parameter(plugin, index);
 }

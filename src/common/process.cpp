@@ -219,6 +219,8 @@ void Process::Handle::detach() noexcept {
 }
 
 void Process::Handle::terminate() const noexcept {
+    puts("Process::Handle::terminate");
+    printf("SIGINT pid %d\n", pid_);
     kill(pid_, SIGINT);
     wait();
 }
@@ -227,7 +229,9 @@ std::optional<int> Process::Handle::wait() const noexcept {
     // This may fail if we've already reaped the process and terminate gets
     // called another time, so we won't check the result here
     int status = 0;
+    printf("waitpid %d\n", pid_);
     waitpid(pid_, &status, 0);
+    printf("waitpid ret status %d\n", status);
 
     if (WIFEXITED(status)) {
         return WEXITSTATUS(status);

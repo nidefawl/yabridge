@@ -97,7 +97,7 @@ Process::Handle HostProcess::launch_host(
         logger.async_log_pipe_lines(stderr_pipe_, stderr_buffer_,
                                     "[Wine STDERR] ");
     }
-
+    printf("return child handle %d\n", child_handle.pid());
     return child_handle;
 }
 
@@ -156,8 +156,11 @@ void IndividualHost::terminate() {
     //       by that process, so if we don't manually close the sockets there
     //       will still be threads listening on those sockets which in turn also
     //       prevents us from joining our `std::jthread`s on the plugin side.
+    
+    puts("IndividualHost sockets_.close");
     sockets_.close();
 
+    puts("IndividualHost handle_.terminate");
     // This will also reap the terminated process
     handle_.terminate();
 }
@@ -254,6 +257,7 @@ bool GroupHost::running() noexcept {
 }
 
 void GroupHost::terminate() {
+    puts("sockets_.close");
     // There's no need to manually terminate group host processes as they will
     // shut down automatically after all plugins have exited. Manually closing
     // the sockets will cause the associated plugin to exit.

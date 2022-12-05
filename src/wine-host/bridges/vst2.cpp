@@ -241,6 +241,7 @@ Vst2Bridge::Vst2Bridge(MainContext& main_context,
                     sockets_.host_vst_parameters_.send(response, buffer);
                 }
             });
+        puts("parameters_handler_ exiting");
     });
 
     process_replacing_handler_ = Win32Thread([&]() {
@@ -364,6 +365,7 @@ Vst2Bridge::Vst2Bridge(MainContext& main_context,
             // don't just clear `next_buffer_midi_events` here
             should_clear_midi_events_ = true;
         });
+        puts("process_replacing_handler_ exiting");
     });
 }
 
@@ -375,7 +377,7 @@ void Vst2Bridge::run() {
     set_realtime_priority(true);
 
     sockets_.host_vst_dispatch_.receive_events(
-        std::nullopt,
+        std::pair<Vst2Logger&, bool>(logger_, true),
         [&](Vst2Event& event, bool /*on_main_thread*/) -> Vst2EventResult {
             if (event.opcode == effProcessEvents) {
                 // For 99% of the plugins we can just call
@@ -497,6 +499,7 @@ void Vst2Bridge::run() {
 }
 
 void Vst2Bridge::close_sockets() {
+    puts("Vst2Bridge::close_sockets");
     sockets_.close();
 }
 

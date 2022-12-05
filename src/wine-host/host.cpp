@@ -118,7 +118,7 @@ int YABRIDGE_EXPORT
 
         // This shouldn't be needed, but sometimes with Wine background threads
         // will be kept alive while this process exits
-        TerminateProcess(GetCurrentProcess(), 0);
+        // TerminateProcess(GetCurrentProcess(), 0);
     } else {
         const std::string plugin_type_str(argv[1]);
         const PluginType plugin_type = plugin_type_from_string(plugin_type_str);
@@ -169,7 +169,7 @@ int YABRIDGE_EXPORT
 
             // See below, just returning from `main()` isn't enough to terminate
             // the process
-            TerminateProcess(GetCurrentProcess(), 0);
+            // TerminateProcess(GetCurrentProcess(), 0);
 
             return 1;
         }
@@ -184,7 +184,8 @@ int YABRIDGE_EXPORT
 
             // // When the sockets get closed, this application should
             // // terminate gracefully
-            // main_context.stop();
+            puts("workerthread call main_context.stop()");
+            main_context.stop();
             // FIXME: So some of the background threads spawned by the plugin
             //        may get stuck if the host got terminated abruptly. After
             //        an entire day of debugging I still have no idea whether
@@ -193,7 +194,7 @@ int YABRIDGE_EXPORT
             //        'fixes' the issue.
             //
             //        https://github.com/robbert-vdh/yabridge/issues/69
-            TerminateProcess(GetCurrentProcess(), 0);
+            // TerminateProcess(GetCurrentProcess(), 0);
         });
 
         std::cerr << "Finished initializing '" << plugin_location << "'"

@@ -504,10 +504,13 @@ class SocketHandler {
         T object;
         while (true) {
             try {
+                puts("SocketHandler::receive_single");
                 receive_single<T>(object, buffer);
-
+                puts("SocketHandler::callback");
                 callback(object, buffer);
-            } catch (const std::system_error&) {
+            } catch (const std::system_error& e) {
+                puts("SocketHandler::catch");
+                puts(e.what());
                 // This happens when the sockets got closed because the plugin
                 // is being shut down
                 break;
@@ -666,7 +669,9 @@ class AdHocSocketHandler {
                 secondary_socket.connect(endpoint_);
 
                 return callback(secondary_socket);
-            } catch (const std::system_error&) {
+            } catch (const std::system_error& e) {
+                puts("AdHocSocketHandler::catch send");
+                puts(e.what());
                 // So, what do we do when noone is listening on the endpoint
                 // yet? This can happen with plugin groups when the Wine
                 // host process does an `audioMaster()` call before the
@@ -784,8 +789,11 @@ class AdHocSocketHandler {
         // socket shuts down
         while (true) {
             try {
+                puts("primary_callback");
                 primary_callback(socket_);
-            } catch (const std::system_error&) {
+            } catch (const std::system_error& e) {
+                puts("AdHocSocketHandler::catch receive_multi");
+                puts(e.what());
                 // This happens when the sockets got closed because the plugin
                 // is being shut down
                 break;
@@ -795,10 +803,16 @@ class AdHocSocketHandler {
         // After the primary socket gets terminated (during shutdown) we'll make
         // sure all outstanding jobs have been processed and then drop all work
         // from the IO context
+
+        puts("std::lock_guard lock(active_secondary_requests_mutex)");
         std::lock_guard lock(active_secondary_requests_mutex);
+
+        puts("secondary_context.stop");
         secondary_context.stop();
+        puts("acceptor_.reset");
         acceptor_.reset();
 
+        puts("currently_listening_ = false");
         currently_listening_ = false;
     }
 
