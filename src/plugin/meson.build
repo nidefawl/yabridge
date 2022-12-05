@@ -25,7 +25,7 @@ vst3_plugin_deps = [
   rt_dep,
   threads_dep,
   tomlplusplus_dep,
-  vst3_sdk_native_dep,
+  #vst3_sdk_native_dep,
 ]
 
 vst2_plugin_sources = files(
